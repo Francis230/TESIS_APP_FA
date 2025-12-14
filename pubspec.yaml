@@ -1,0 +1,91 @@
+name: tesis_appmovilfaj
+description: "Aplicación móvil de notificaciones del transporte escolar - EMAÚS"
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+  
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  sign_in_with_apple: ^6.1.0
+  webview_flutter: ^4.8.0
+  image_picker: ^1.0.7  
+  cupertino_icons: ^1.0.8
+  go_router: ^6.0.0
+  flutter_riverpod: ^2.0.0
+  supabase_flutter: ^1.4.0
+  flutter_local_notifications: ^17.2.1
+  geolocator: ^10.0.0
+  google_maps_flutter: ^2.2.0
+  flutter_secure_storage: ^8.0.0
+  http: ^0.13.5
+  intl: ^0.20.2
+  lottie: ^3.0.0
+  google_fonts: ^4.0.4 
+  font_awesome_flutter: ^10.9.1
+  # Dependencias para las notificaciones Firebase:
+  firebase_core: ^3.0.0
+  firebase_messaging: ^15.0.0
+  flutter_launcher_icons: ^0.14.4
+  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+flutter_launcher_icons: 
+  android: true
+  image_path: "assets/images/app_icon.png"
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  uses-material-design: true
+  assets:
+    # Imagenes para inicio
+    - assets/images/inicio/background_inicio.png
+    - assets/images/inicio/logo_emaus.jpg
+    # Animcaion de inicio:
+    - assets/animations/login_bus.json
+    - assets/animations/administrador_animacion.json
+    #Animacion de login:
+    - assets/animations/login/loding_bus.gif
+    - assets/animations/login/rol_admin.json
+    - assets/animations/login/rol_conductor.gif
+    #Animacion de admin_dashboard:
+    - assets/animations/admin/add_conduc.json
+    - assets/animations/admin/list_conduc.json
+    - assets/animations/admin/rut_conduc.json
+
+    # Animacion de correcto o erroneo
+    - assets/animations/bool/error.json
+    - assets/animations/bool/correct.json
+    - assets/animations/bool/alert_pass.json
+    # Animacion en pre_login
+    - assets/animations/pre_login/code_login.json
+    - assets/animations/pre_login/newpass_login.json
+    # Animacion en el perfil Conductor
+    - assets/animations/conductor/inicio_conductor.json
+    - assets/animations/conductor/agregar_estu.json
+    - assets/animations/conductor/recargar_estu.json
+    - assets/animations/conductor/error_search.json
+    - assets/animations/conductor/calendar_conduc.json
+    # Animacion en el perfil Representante
+    - assets/animations/repre/pin_maps.gif
+    - assets/animations/repre/offline_driver.json
+    # Imagenes para los demas perfiles
+    - assets/images/linea_divisor.jpg
+    - assets/images/bus_icon.png
+    - assets/images/key_icon.json
+
+  

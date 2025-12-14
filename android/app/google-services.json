@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "462202276137",
+    "project_id": "tesisemaus",
+    "storage_bucket": "tesisemaus.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:462202276137:android:3b5aad45ebfb6268370f38",
+        "android_client_info": {
+          "package_name": "com.tesis.appmovilfaj"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAippsL_FS1gcHvTcKSyH2rCPe9bKQtGE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
