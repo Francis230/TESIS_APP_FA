@@ -1,3 +1,4 @@
+// Archivo - lib/core/widgets/mapa_widget.dart
 import 'dart:async';
 import 'dart:ui' as ui; 
 import 'package:flutter/material.dart';
@@ -86,18 +87,18 @@ class _MapaWidgetState extends State<MapaWidget> {
   void _actualizarMarcadorYCamara(Position posicion) async {
     final nuevaPosicion = LatLng(posicion.latitude, posicion.longitude);
     // Calcula la rotación del bus solo si está en movimiento para evitar giros erráticos
-    if (posicion.speed * 3.6 > 3) {
-      _ultimaRotacionConocida = posicion.heading;
-    }
+    // if (posicion.speed * 3.6 > 3) {
+    //   _ultimaRotacionConocida = posicion.heading;
+    // }
     // Dibuja nuevamente el marcador del bus en la nueva coordenada
     setState(() {
       _marcadorBus = Marker(
         markerId: const MarkerId('bus_marker'),
         position: nuevaPosicion,
         icon: _iconoBus ?? BitmapDescriptor.defaultMarker,
-        rotation: _ultimaRotacionConocida,
+        // rotation: _ultimaRotacionConocida,
+        // flat: true,
         anchor: const Offset(0.5, 0.5),
-        flat: true,
       );
     });
     // Mueve la cámara siguiendo al bus con una animación fluida
