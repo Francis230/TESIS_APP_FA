@@ -203,7 +203,7 @@ class AlertasTab extends ConsumerWidget {
                       title: Text(notificacion['titulo'] ?? 'Notificación', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: AppTheme.acentoBlanco)),
                       subtitle: Text(notificacion['mensaje'] ?? '', style: GoogleFonts.montserrat(color: AppTheme.grisClaro)),
                       trailing: Text(
-                        DateFormat('hh:mm a').format(fechaMostrar),
+                        DateFormat('dd/MM\nhh:mm a').format(fechaMostrar),
                         textAlign: TextAlign.right,
                         style: GoogleFonts.montserrat(color: AppTheme.grisClaro, fontSize: 12),
                       ),

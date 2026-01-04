@@ -321,17 +321,21 @@ class _RegistroPantallaState extends State<RegistroPantalla> {
                           label: 'Confirmar contraseña',
                           hintText: 'Repite tu contraseña',
                           mostrarClave: _mostrarConfirmClave,
-                          onPressedSuffix: () => setState(
-                              () => _mostrarConfirmClave = !_mostrarConfirmClave),
-                          validator: Validadores.validarClave,
+                          onPressedSuffix: () => setState(() => _mostrarConfirmClave = !_mostrarConfirmClave),
+                          validator: (valor) {
+                            if (valor == null || valor.isEmpty) return 'Por favor confirma tu contraseña';
+                            if (valor != _claveCtrl.text) return 'Las contraseñas no coinciden';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 32),
                         // Botón de registro con estado de carga animado
                         ElevatedButton(
-                          onPressed: _cargando ? null : _registrar,
+                          onPressed: _registrar,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.azulFuerte,
                             foregroundColor: Colors.white,
+                            disabledBackgroundColor: AppTheme.azulFuerte,
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(buttonRadius),
@@ -355,6 +359,7 @@ class _RegistroPantallaState extends State<RegistroPantalla> {
                                       style: GoogleFonts.montserrat(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     )
                                   ],
