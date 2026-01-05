@@ -31,16 +31,6 @@ Aplicación móvil desarrollada en Flutter para la gestión, monitoreo y segurid
 * Recepción de notificaciones push (Bus cerca, Estudiante a bordo).
 * Visualización del historial de alertas.
 
-## 📸 Capturas de Pantalla
-| Login | Ubicación | Alertas | Perfil |
-|:---:|:---:|:---:|:---:|
-| ![Login](<img width="844" height="1600" alt="image" src="https://github.com/user-attachments/assets/54b7fb7a-ee5d-44d9-87dc-47842417e5c1" />
-) | ![Mapa](<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/dbecf79c-48a0-4d9f-8ccf-43677b81aefe" />
-) | ![Notificación](<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/1801a63f-b879-4f17-b004-082e89a4fb60" />
-) | ![Perfil](<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/cd2de989-eccc-4499-825b-fb90b3e75cab" />
-) |
-
-> *Nota: Las capturas se encuentran en la carpeta `screenshots` del repositorio.*
 
 ## 🚀 Cómo ejecutar el código 
 
