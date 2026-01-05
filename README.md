@@ -1,11 +1,7 @@
-# Sistema de Gestión de Transporte Escolar - EMAÚS (App Móvil)
+# Sistema de Gestión de Transporte Escolar - EMAÚS Apliación Móvil
 
 Aplicación móvil desarrollada en Flutter para la gestión, monitoreo y seguridad del transporte escolar de la "Unidad Educativa Particular EMAÚS". Permite el seguimiento en tiempo real de las unidades y la comunicación fluida entre conductores, padres y administradores.
 
-## 📱 Descarga la App (APK)
-Para probar la aplicación en un dispositivo Android, descarga la última versión aquí:
-
-[**⬇️ Descargar APK (Versión 1.0)**](AQUI_PONES_EL_LINK_DE_GITHUB_RELEASES)
 
 ---
 
@@ -36,17 +32,21 @@ Para probar la aplicación en un dispositivo Android, descarga la última versi�
 * Visualización del historial de alertas.
 
 ## 📸 Capturas de Pantalla
-| Login | Monitoreo | Alertas | Perfil |
+| Login | Ubicación | Alertas | Perfil |
 |:---:|:---:|:---:|:---:|
-| ![Login](LINK_IMAGEN_1) | ![Mapa](LINK_IMAGEN_2) | ![Alertas](LINK_IMAGEN_3) | ![Perfil](LINK_IMAGEN_4) |
+| ![Login](<img width="844" height="1600" alt="image" src="https://github.com/user-attachments/assets/54b7fb7a-ee5d-44d9-87dc-47842417e5c1" />
+) | ![Mapa](<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/dbecf79c-48a0-4d9f-8ccf-43677b81aefe" />
+) | ![Notificación](<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/1801a63f-b879-4f17-b004-082e89a4fb60" />
+) | ![Perfil](<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/cd2de989-eccc-4499-825b-fb90b3e75cab" />
+) |
 
 > *Nota: Las capturas se encuentran en la carpeta `screenshots` del repositorio.*
 
-## 🚀 Cómo ejecutar el código (Para Desarrolladores)
+## 🚀 Cómo ejecutar el código 
 
 1.  **Clonar el repositorio:**
     ```bash
-    git clone [https://github.com/TU_USUARIO/TU_REPO.git](https://github.com/TU_USUARIO/TU_REPO.git)
+    git clone [https://github.com/Francis230/TESIS_APP_FA.git)
     ```
 2.  **Instalar dependencias:**
     ```bash
@@ -63,4 +63,4 @@ Para probar la aplicación en un dispositivo Android, descarga la última versi�
 ## 🎓 Autor
 * **Francis Aconda**
 * **Carrera:** Tecnología en Desarrollo de Software
-* **Institución:** Escuela Politécnica Nacional (EPN)
+* **Institución:** Escuela Politécnica Nacional - ESFOT
