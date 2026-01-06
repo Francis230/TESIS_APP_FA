@@ -671,7 +671,7 @@ class AdminRepository {
     required String color,
   }) async {
     try {
-      await _cliente.from('conductores').insert({
+      await _cliente.from('conductores').upsert({
         'conductor_id': userId,
         'licencia_conducir': licencia,
         'placa_vehiculo': placa,

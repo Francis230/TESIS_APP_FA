@@ -51,6 +51,24 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
     // Inicia la carga de datos del perfil al abrir la pantalla
     _loadPerfil();
   }
+  // Desactivacion del modo de condcutor en el perfil del admin
+  Future<void> _desactivarModoConductor() async {
+    try {
+      setState(() => _guardando = true);
+      
+      // Llamamos al repositorio para cambiar 'permiso_activo' a false
+      await _adminRepo.desactivarConductor(conductorId: _userId!);
+      
+      // Volvemos a cargar el perfil para actualizar _esConductorActivo
+      await _loadPerfil(); 
+      
+      _mostrarDialogoExito("Modo conductor desactivado correctamente.");
+    } catch (e) {
+      _mostrarDialogoError("No se pudo desactivar: $e");
+    } finally {
+      setState(() => _guardando = false);
+    }
+  }
   // Recupera la información del usuario y verifica si tiene permisos de conductor activos
   Future<void> _loadPerfil() async {
     setState(() => _cargando = true);
@@ -91,9 +109,9 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
       builder: (ctx) => _DialogoRegistroVehiculo(
         userId: _userId!,
         adminRepo: _adminRepo,
-        onSuccess: () {
+        onSuccess: () async{
           Navigator.pop(ctx); 
-          _loadPerfil(); 
+          await _loadPerfil(); 
           _mostrarDialogoExito("¡Perfil de Conductor Activado! Ahora puedes iniciar sesión como conductor.");
         },
       ),
@@ -323,7 +341,20 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
                               ),
                               child: const Text("Activar Modo Conductor"),
                             ),
-                          )
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: _desactivarModoConductor, 
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.redAccent,
+                                side: const BorderSide(color: Colors.redAccent),
+                              ),
+                              child: const Text("Desactivar Perfil de Conductor"),
+                            ),
+                          ),
                         ]
                       ],
                     ),
