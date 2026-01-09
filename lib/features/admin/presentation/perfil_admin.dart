@@ -51,24 +51,25 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
     // Inicia la carga de datos del perfil al abrir la pantalla
     _loadPerfil();
   }
-  // Desactivacion del modo de condcutor en el perfil del admin
-  Future<void> _desactivarModoConductor() async {
-    try {
-      setState(() => _guardando = true);
+  // // Desactivacion del modo de condcutor en el perfil del admin
+  // Future<void> _desactivarModoConductor() async {
+  //   try {
+  //     setState(() => _guardando = true);
       
-      // Llamamos al repositorio para cambiar 'permiso_activo' a false
-      await _adminRepo.desactivarConductor(conductorId: _userId!);
+  //     // Llamamos al repositorio para cambiar 'permiso_activo' a false
+  //     await _adminRepo.desactivarConductor(conductorId: _userId!);
       
-      // Volvemos a cargar el perfil para actualizar _esConductorActivo
-      await _loadPerfil(); 
+  //     // Volvemos a cargar el perfil para actualizar _esConductorActivo
+  //     await _loadPerfil(); 
       
-      _mostrarDialogoExito("Modo conductor desactivado correctamente.");
-    } catch (e) {
-      _mostrarDialogoError("No se pudo desactivar: $e");
-    } finally {
-      setState(() => _guardando = false);
-    }
-  }
+  //     _mostrarDialogoExito("Modo conductor desactivado correctamente.");
+  //   } catch (e) {
+  //     _mostrarDialogoError("No se pudo desactivar: $e");
+  //   } finally {
+  //     setState(() => _guardando = false);
+  //   }
+  // }
+  
   // Recupera la información del usuario y verifica si tiene permisos de conductor activos
   Future<void> _loadPerfil() async {
     setState(() => _cargando = true);
@@ -301,64 +302,62 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
                   ),
                   const SizedBox(height: 30),
                   _buildSectionHeader('Rol de Conductor', FontAwesomeIcons.carSide),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: _buildDarkCardDecoration().copyWith(
-                      // Si ya es conductor, borde verde sutil, si no, normal
-                      border: Border.all(color: _esConductorActivo ? Colors.green.withOpacity(0.5) : Colors.white24)
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
+                  StreamBuilder<bool>(
+                    stream: _adminRepo.conductorActivoStream(_userId!),
+                    builder: (context, snapshot) {
+                      final activo = snapshot.data ?? _esConductorActivo;
+
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: _buildDarkCardDecoration().copyWith(
+                          // Si ya es conductor, borde verde sutil, si no, normal
+                          border: Border.all(
+                            color: activo ? Colors.green.withOpacity(0.5) : Colors.white24,
+                          ),
+                        ),
+                        child: Column(
                           children: [
-                            Icon(
-                              _esConductorActivo ? Icons.check_circle : Icons.info_outline,
-                              color: _esConductorActivo ? Colors.greenAccent : Colors.orangeAccent,
-                              size: 28,
+                            Row(
+                              children: [
+                                Icon(
+                                  activo ? Icons.check_circle : Icons.info_outline,
+                                  color: activo ? Colors.greenAccent : Colors.orangeAccent,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    activo
+                                      ? "Tu cuenta está habilitada para conducir."
+                                      : "No tienes perfil de conductor activo.",
+                                    style: const TextStyle(color: Colors.white, fontSize: 15),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _esConductorActivo 
-                                  ? "Tu cuenta está habilitada para conducir." 
-                                  : "No tienes perfil de conductor activo.",
-                                style: const TextStyle(color: Colors.white, fontSize: 15),
+                            if (!activo) ...[
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _activarModoConductor,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.azulFuerte,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text("Activar Modo Conductor"),
+                                ),
                               ),
-                            ),
+                            ]
                           ],
                         ),
-                        if (!_esConductorActivo) ...[
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _activarModoConductor,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.azulFuerte,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: const Text("Activar Modo Conductor"),
-                            ),
-                          ),
-                        ] else ...[
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: _desactivarModoConductor, 
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.redAccent,
-                                side: const BorderSide(color: Colors.redAccent),
-                              ),
-                              child: const Text("Desactivar Perfil de Conductor"),
-                            ),
-                          ),
-                        ]
-                      ],
-                    ),
-                  ),
+                      );
+                    },
+                  ), 
                   const SizedBox(height: 30),
 
                   // Botones de acción

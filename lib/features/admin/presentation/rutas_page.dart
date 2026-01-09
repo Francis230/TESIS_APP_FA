@@ -391,7 +391,7 @@ class _RutasPageState extends State<RutasPage> {
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: Text('Eliminar Ruta', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+        title: Text('Eliminar Ruta', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: AppTheme.negroPrincipal)),
         content: Text(
           '¿Seguro que deseas eliminar la ruta "$nombre"?',
           style: GoogleFonts.montserrat(color: Colors.black87),
@@ -399,7 +399,7 @@ class _RutasPageState extends State<RutasPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancelar', style: GoogleFonts.montserrat(color: AppTheme.grisClaro)),
+            child: Text('Cancelar', style: GoogleFonts.montserrat(color: const Color.fromARGB(255, 0, 0, 0))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),

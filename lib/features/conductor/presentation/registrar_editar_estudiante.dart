@@ -3,17 +3,18 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart'; 
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:tesis_appmovilfaj/app/app_theme.dart';
-import 'package:tesis_appmovilfaj/core/utils/validadores.dart'; 
+import 'package:tesis_appmovilfaj/core/utils/validadores.dart';
 import 'package:tesis_appmovilfaj/core/widgets/boton_principal.dart';
 import 'package:tesis_appmovilfaj/features/conductor/data/conductor_repository.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 // Gestión del formulario para inscribir nuevos estudiantes o modificar la información de los existentes
 class RegistrarEditarEstudiantePage extends StatefulWidget {
   final Map<String, dynamic>? estudiante;
@@ -27,6 +28,24 @@ class RegistrarEditarEstudiantePage extends StatefulWidget {
 
 class _RegistrarEditarEstudiantePageState
     extends State<RegistrarEditarEstudiantePage> {
+  final List<String> _gradosDisponibles = [
+    'Inicial',
+    'Primero',
+    'Segundo',
+    'Tercero',
+    'Cuarto',
+    'Quinto',
+    'Sexto',
+    'Séptimo',
+    'Octavo',
+    'Noveno',
+    'Décimo',
+    'Primero Bachillerato',
+    'Segundo Bachillerato',
+    'Tercero Bachillerato',
+  ];
+
+  final List<String> _paralelosDisponibles = ['A', 'B', 'C'];
   final _formKey = GlobalKey<FormState>();
   final _repo = ConductorRepository();
   bool _cargando = false;
@@ -62,7 +81,11 @@ class _RegistrarEditarEstudiantePageState
     _obsCtrl = TextEditingController(text: est?['observaciones'] ?? '');
     _fotoUrlExistente = est?['foto_url'];
     if (est?['fecha_nacimiento'] != null) {
-      try { _fechaNacimiento = DateTime.parse(est!['fecha_nacimiento']); } catch (_) { _fechaNacimiento = null; }
+      try {
+        _fechaNacimiento = DateTime.parse(est!['fecha_nacimiento']);
+      } catch (_) {
+        _fechaNacimiento = null;
+      }
     }
     if (est?['latitud_casa'] != null && est?['longitud_casa'] != null) {
       try {
@@ -70,7 +93,9 @@ class _RegistrarEditarEstudiantePageState
           double.parse(est!['latitud_casa'].toString()),
           double.parse(est['longitud_casa'].toString()),
         );
-      } catch (e) { debugPrint("Error al parsear coordenadas: $e"); }
+      } catch (e) {
+        debugPrint("Error al parsear coordenadas: $e");
+      }
     }
     if (_esEdicion && est != null) {
       if (est['representante'] is Map<String, dynamic>) {
@@ -97,11 +122,14 @@ class _RegistrarEditarEstudiantePageState
     _obsCtrl.dispose();
     super.dispose();
   }
+
   // Permite seleccionar una imagen desde la galería para usarla como foto de perfil
   Future<void> _seleccionarFoto() async {
     final picker = ImagePicker();
-    final pickedFile =
-        await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
       setState(() {
@@ -121,19 +149,22 @@ class _RegistrarEditarEstudiantePageState
       initialDate: initial,
       firstDate: DateTime(2000),
       lastDate: hoy,
-      locale: const Locale('es', 'ES'), 
+      locale: const Locale('es', 'ES'),
       builder: (ctx, child) {
         return Theme(
           data: Theme.of(ctx).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppTheme.azulFuerte, 
-              onPrimary: Colors.white, 
-              surface: Colors.white, 
-              onSurface: AppTheme.negroPrincipal, 
+              primary: AppTheme.azulFuerte,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: AppTheme.negroPrincipal,
             ),
-            dialogBackgroundColor: Colors.white, 
+            dialogBackgroundColor: Colors.white,
             textTheme: GoogleFonts.montserratTextTheme(Theme.of(ctx).textTheme)
-                .apply(bodyColor: AppTheme.negroPrincipal, displayColor: AppTheme.negroPrincipal),
+                .apply(
+                  bodyColor: AppTheme.negroPrincipal,
+                  displayColor: AppTheme.negroPrincipal,
+                ),
           ),
           child: child!,
         );
@@ -143,7 +174,7 @@ class _RegistrarEditarEstudiantePageState
       setState(() => _fechaNacimiento = picked);
     }
   }
-  
+
   // Traduce los errores técnicos del sistema a mensajes comprensibles para el usuario
   String _traducirError(Object e) {
     final errorStr = e.toString().toLowerCase();
@@ -155,41 +186,51 @@ class _RegistrarEditarEstudiantePageState
     if (errorStr.contains('duplicate key value violates unique constraint')) {
       return 'La cédula ingresada ya pertenece a otro estudiante.';
     }
-    
+
     return 'Ocurrió un error inesperado al guardar.';
   }
+
   // Muestra una confirmación visual cuando la operación se completa exitosamente
   Future<void> _mostrarDialogoExito(String titulo, String mensaje) async {
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white, 
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             lottie.Lottie.asset(
-              'assets/animations/bool/correct.json', 
+              'assets/animations/bool/correct.json',
               repeat: false,
               width: 120,
               height: 120,
-              errorBuilder: (_, __, ___) =>
-                  const FaIcon(FontAwesomeIcons.solidCircleCheck,
-                      color: Colors.green, size: 60),
+              errorBuilder: (_, __, ___) => const FaIcon(
+                FontAwesomeIcons.solidCircleCheck,
+                color: Colors.green,
+                size: 60,
+              ),
             ),
             const SizedBox(height: 12),
-            Text(titulo,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.montserrat(
-                    color: AppTheme.negroPrincipal,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18)),
+            Text(
+              titulo,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.montserrat(
+                color: AppTheme.negroPrincipal,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(mensaje,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.montserrat(
-                    color: AppTheme.tonoIntermedio, fontSize: 14)),
+            Text(
+              mensaje,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.montserrat(
+                color: AppTheme.tonoIntermedio,
+                fontSize: 14,
+              ),
+            ),
           ],
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -197,61 +238,87 @@ class _RegistrarEditarEstudiantePageState
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.azulFuerte, 
-                foregroundColor: AppTheme.acentoBlanco,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10))),
-            child: Text('Aceptar',
-                style:
-                    GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
-          )
+              backgroundColor: AppTheme.azulFuerte,
+              foregroundColor: AppTheme.acentoBlanco,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Aceptar',
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+            ),
+          ),
         ],
       ),
     );
   }
+
   // Despliega una alerta visual estilizada para informar sobre fallos en el proceso
   Future<void> _mostrarDialogoError(String titulo, String mensaje) async {
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white, 
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon: lottie.Lottie.asset('assets/animations/bool/error.json', height: 100, repeat: false),
-        title: Text(titulo,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.montserrat(
-                color: Colors.red.shade700, fontWeight: FontWeight.bold)),
-        content: Text(mensaje,
-             textAlign: TextAlign.center,
-             style: GoogleFonts.montserrat(color: Colors.black87)),
+        icon: lottie.Lottie.asset(
+          'assets/animations/bool/error.json',
+          height: 100,
+          repeat: false,
+        ),
+        title: Text(
+          titulo,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(
+            color: Colors.red.shade700,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          mensaje,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(color: Colors.black87),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Aceptar', style: GoogleFonts.montserrat(color: AppTheme.azulFuerte, fontWeight: FontWeight.w600)),
-          )
+            child: Text(
+              'Aceptar',
+              style: GoogleFonts.montserrat(
+                color: AppTheme.azulFuerte,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ],
         actionsAlignment: MainAxisAlignment.center,
       ),
     );
   }
+
   // Abre un mapa interactivo para que el usuario fije la ubicación exacta del domicilio
   Future<void> _seleccionarUbicacionEnMapa() async {
-    // Si no hay coordenadas, centramos en Quito 
-    gmaps.LatLng posicionInicial = _coordenadasCasa ?? const gmaps.LatLng(-0.22985, -78.52498);
+    // Si no hay coordenadas, centramos en Quito
+    gmaps.LatLng posicionInicial =
+        _coordenadasCasa ?? const gmaps.LatLng(-0.22985, -78.52498);
     gmaps.LatLng? posicionSeleccionada;
-    
+
     // Variable para controlar la tarjeta de instrucción
-    bool mostrarInstruccion = true; 
+    bool mostrarInstruccion = true;
 
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) {
-          return Dialog( 
+          return Dialog(
             backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)), // Bordes muy redondeados
-            insetPadding: const EdgeInsets.all(16), // Margen respecto a la pantalla
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ), // Bordes muy redondeados
+            insetPadding: const EdgeInsets.all(
+              16,
+            ), // Margen respecto a la pantalla
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -260,16 +327,18 @@ class _RegistrarEditarEstudiantePageState
                   child: Text(
                     'Ubicación del Domicilio',
                     style: GoogleFonts.montserrat(
-                      color: AppTheme.negroPrincipal, 
+                      color: AppTheme.negroPrincipal,
                       fontWeight: FontWeight.bold,
-                      fontSize: 18
+                      fontSize: 18,
                     ),
                   ),
                 ),
 
                 // Renderiza el mapa de Google dentro del diálogo para la selección
                 SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.55, // 55% de la altura de la pantalla
+                  height:
+                      MediaQuery.of(context).size.height *
+                      0.55, // 55% de la altura de la pantalla
                   width: double.maxFinite,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -283,12 +352,16 @@ class _RegistrarEditarEstudiantePageState
                               target: posicionInicial,
                               zoom: 15,
                             ),
-                            myLocationButtonEnabled: true, // Botón de "mi ubicación"
+                            myLocationButtonEnabled:
+                                true, // Botón de "mi ubicación"
                             myLocationEnabled: true,
                             markers: {
                               gmaps.Marker(
-                                markerId: const gmaps.MarkerId('domicilio_estudiante'),
-                                position: posicionSeleccionada ?? posicionInicial,
+                                markerId: const gmaps.MarkerId(
+                                  'domicilio_estudiante',
+                                ),
+                                position:
+                                    posicionSeleccionada ?? posicionInicial,
                                 draggable: true,
                                 onDragEnd: (nuevaPosicion) {
                                   setDialogState(() {
@@ -311,28 +384,51 @@ class _RegistrarEditarEstudiantePageState
                               left: 10,
                               right: 10,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                  horizontal: 12,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.negroPrincipal.withOpacity(0.85),
+                                  color: AppTheme.negroPrincipal.withOpacity(
+                                    0.85,
+                                  ),
                                   borderRadius: BorderRadius.circular(30),
                                   boxShadow: [
-                                    BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 2))
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
                                   ],
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.touch_app, color: AppTheme.acentoBlanco, size: 18),
+                                    const Icon(
+                                      Icons.touch_app,
+                                      color: AppTheme.acentoBlanco,
+                                      size: 18,
+                                    ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
                                         'Arrastra el pin para ubicar la dirección del estudiante.',
-                                        style: GoogleFonts.montserrat(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                                        style: GoogleFonts.montserrat(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
                                     GestureDetector(
-                                      onTap: () => setDialogState(() => mostrarInstruccion = false),
-                                      child: const Icon(Icons.close, color: Colors.white70, size: 18),
-                                    )
+                                      onTap: () => setDialogState(
+                                        () => mostrarInstruccion = false,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white70,
+                                        size: 18,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -354,11 +450,16 @@ class _RegistrarEditarEstudiantePageState
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             backgroundColor: Colors.grey.shade100,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                           child: Text(
-                            'Cancelar', 
-                            style: GoogleFonts.montserrat(color: Colors.grey.shade700, fontWeight: FontWeight.bold)
+                            'Cancelar',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -366,7 +467,8 @@ class _RegistrarEditarEstudiantePageState
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            _coordenadasCasa = posicionSeleccionada ?? posicionInicial;
+                            _coordenadasCasa =
+                                posicionSeleccionada ?? posicionInicial;
                             Navigator.of(ctx).pop();
                           },
                           style: ElevatedButton.styleFrom(
@@ -374,11 +476,15 @@ class _RegistrarEditarEstudiantePageState
                             backgroundColor: AppTheme.azulFuerte,
                             foregroundColor: Colors.white,
                             elevation: 2,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                           child: Text(
-                            'Confirmar', 
-                            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)
+                            'Confirmar',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -394,7 +500,7 @@ class _RegistrarEditarEstudiantePageState
 
     setState(() {}); // Actualiza la pantalla principal al cerrar el mapa
   }
-  
+
   // Abre un diálogo para buscar y vincular a un representante registrado en el sistema
   Future<void> _buscarYSeleccionarRepresentante() async {
     final TextEditingController searchCtrl = TextEditingController();
@@ -404,99 +510,151 @@ class _RegistrarEditarEstudiantePageState
     await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (ctx) {
-        return StatefulBuilder(builder: (ctx, setStateDialog) {
-          
-          Future<void> cargarRepresentantes([String q = '']) async {
-            setStateDialog(() => cargando = true);
-            try {
-              representantes = await _repo.buscarRepresentantes(q);
-            } catch (e) {
-              print("Error buscando representantes: $e");
-              representantes = [];
+        return StatefulBuilder(
+          builder: (ctx, setStateDialog) {
+            Future<void> cargarRepresentantes([String q = '']) async {
+              setStateDialog(() => cargando = true);
+              try {
+                representantes = await _repo.buscarRepresentantes(q);
+              } catch (e) {
+                print("Error buscando representantes: $e");
+                representantes = [];
+              }
+              setStateDialog(() => cargando = false);
             }
-            setStateDialog(() => cargando = false);
-          }
-          
-          if (representantes.isEmpty && cargando) {
-            cargarRepresentantes();
-          }
 
-          return AlertDialog(
-            backgroundColor: AppTheme.fondoClaro,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text('Seleccionar Representante',
-                    style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal, fontWeight: FontWeight.bold)),
-            content: SizedBox(
-              width: double.maxFinite,
-              height: 450,
-              child: Column(
-                children: [
-                  TextField(
-                    controller: searchCtrl,
-                    style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
-                    decoration: InputDecoration(
-                      hintText: 'Buscar por nombre o correo...',
-                      hintStyle: GoogleFonts.montserrat(color: AppTheme.tonoIntermedio),
-                      prefixIcon: const Icon(Icons.search, color: AppTheme.tonoIntermedio),
-                      filled: true,
-                      fillColor: AppTheme.grisClaro.withOpacity(0.3),
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    onChanged: (value) => cargarRepresentantes(value),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: cargando
-                        ? const Center(child: CircularProgressIndicator(color: AppTheme.azulFuerte))
-                        : representantes.isEmpty
-                            ? Center(
-                                child: Text('No se encontraron representantes.',
-                                    style: GoogleFonts.montserrat(color: AppTheme.tonoIntermedio)))
-                            : ListView.separated(
-                                itemCount: representantes.length,
-                                separatorBuilder: (_, __) => const Divider(color: AppTheme.grisClaro, height: 1),
-                                itemBuilder: (context, index) {
-                                  final rep = representantes[index];
-                                  final fotoUrl = rep['foto_url'] as String?;
-                                  return ListTile(
-                                    leading: CircleAvatar(
-                                      radius: 20,
-                                      backgroundColor: AppTheme.grisClaro.withOpacity(0.5),
-                                      backgroundImage: (fotoUrl != null && fotoUrl.isNotEmpty) ? NetworkImage(fotoUrl) : null,
-                                      child: (fotoUrl == null || fotoUrl.isEmpty)
-                                        ? const FaIcon(FontAwesomeIcons.solidUser, size: 18, color: AppTheme.tonoIntermedio)
-                                        : null,
-                                    ),
-                                    title: Text(rep['nombre_completo'] ?? '',
-                                        style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal, fontWeight: FontWeight.w600)),
-                                    subtitle: Text(rep['correo'] ?? '',
-                                        style: GoogleFonts.montserrat(color: AppTheme.tonoIntermedio, fontSize: 13)),
-                                    onTap: () => Navigator.of(ctx).pop(rep),
-                                  );
-                                },
-                              ),
-                  ),
-                ],
+            if (representantes.isEmpty && cargando) {
+              cargarRepresentantes();
+            }
+
+            return AlertDialog(
+              backgroundColor: AppTheme.fondoClaro,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text('Cancelar', style: GoogleFonts.montserrat(color: AppTheme.tonoIntermedio, fontWeight: FontWeight.w600)),
-              )
-            ],
-          );
-        });
+              title: Text(
+                'Seleccionar Representante',
+                style: GoogleFonts.montserrat(
+                  color: AppTheme.negroPrincipal,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 450,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: searchCtrl,
+                      style: GoogleFonts.montserrat(
+                        color: AppTheme.negroPrincipal,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Buscar por nombre o correo...',
+                        hintStyle: GoogleFonts.montserrat(
+                          color: AppTheme.tonoIntermedio,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: AppTheme.tonoIntermedio,
+                        ),
+                        filled: true,
+                        fillColor: AppTheme.grisClaro.withOpacity(0.3),
+                        isDense: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (value) => cargarRepresentantes(value),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: cargando
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppTheme.azulFuerte,
+                              ),
+                            )
+                          : representantes.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No se encontraron representantes.',
+                                style: GoogleFonts.montserrat(
+                                  color: AppTheme.tonoIntermedio,
+                                ),
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: representantes.length,
+                              separatorBuilder: (_, __) => const Divider(
+                                color: AppTheme.grisClaro,
+                                height: 1,
+                              ),
+                              itemBuilder: (context, index) {
+                                final rep = representantes[index];
+                                final fotoUrl = rep['foto_url'] as String?;
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: AppTheme.grisClaro
+                                        .withOpacity(0.5),
+                                    backgroundImage:
+                                        (fotoUrl != null && fotoUrl.isNotEmpty)
+                                        ? NetworkImage(fotoUrl)
+                                        : null,
+                                    child: (fotoUrl == null || fotoUrl.isEmpty)
+                                        ? const FaIcon(
+                                            FontAwesomeIcons.solidUser,
+                                            size: 18,
+                                            color: AppTheme.tonoIntermedio,
+                                          )
+                                        : null,
+                                  ),
+                                  title: Text(
+                                    rep['nombre_completo'] ?? '',
+                                    style: GoogleFonts.montserrat(
+                                      color: AppTheme.negroPrincipal,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    rep['correo'] ?? '',
+                                    style: GoogleFonts.montserrat(
+                                      color: AppTheme.tonoIntermedio,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  onTap: () => Navigator.of(ctx).pop(rep),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(
+                    'Cancelar',
+                    style: GoogleFonts.montserrat(
+                      color: AppTheme.tonoIntermedio,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
       },
     ).then((seleccionado) {
       if (seleccionado != null) {
         setState(() {
           _representanteIdSeleccionado = seleccionado['id'];
-          _representanteNombreSeleccionado = seleccionado['nombre_completo'] ?? 'Seleccionado';
+          _representanteNombreSeleccionado =
+              seleccionado['nombre_completo'] ?? 'Seleccionado';
         });
       }
     });
@@ -507,21 +665,120 @@ class _RegistrarEditarEstudiantePageState
     if (!_formKey.currentState!.validate()) return;
 
     if (_representanteIdSeleccionado == null) {
-      await _mostrarDialogoError(
-          'Falta representante', 'Debes buscar y seleccionar un representante.');
-      return;
+      final continuar = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.cardClaro, 
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+
+          // Icono y el titulo
+          title: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.tonoIntermedio.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 40,
+                  color: AppTheme.tonoIntermedio,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Sin representante',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.montserrat(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.negroPrincipal,
+                ),
+              ),
+            ],
+          ),
+
+          content: Text(
+            'Este estudiante no tiene un representante asignado.\n\n'
+            'Puedes continuar y vincularlo más adelante.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              color: AppTheme.tonoIntermedio,
+            ),
+          ),
+
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.tonoIntermedio,
+                      side: BorderSide(color: AppTheme.bordes),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      'Cancelar',
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.azulFuerte,
+                      foregroundColor: AppTheme.acentoBlanco,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      'Continuar',
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      if (continuar != true) return;
     }
 
     if (_fechaNacimiento == null) {
       await _mostrarDialogoError(
-          'Fecha requerida', 'Selecciona la fecha de nacimiento.');
+        'Fecha requerida',
+        'Selecciona la fecha de nacimiento.',
+      );
       return;
     }
 
     if (_coordenadasCasa == null) {
       await _mostrarDialogoError(
-          'Ubicación requerida',
-          'Por favor selecciona la ubicación del domicilio en el mapa.');
+        'Ubicación requerida',
+        'Por favor selecciona la ubicación del domicilio en el mapa.',
+      );
       return;
     }
 
@@ -535,8 +792,7 @@ class _RegistrarEditarEstudiantePageState
       'alergias': _alergiasCtrl.text.trim(),
       'observaciones': _obsCtrl.text.trim(),
       'direccion': _direccionCtrl.text.trim(),
-      'fecha_nacimiento':
-          _fechaNacimiento!.toIso8601String().substring(0, 10),
+      'fecha_nacimiento': _fechaNacimiento!.toIso8601String().substring(0, 10),
       'representante_id': _representanteIdSeleccionado,
       'latitud_casa': _coordenadasCasa!.latitude,
       'longitud_casa': _coordenadasCasa!.longitude,
@@ -562,19 +818,21 @@ class _RegistrarEditarEstudiantePageState
             .order('creado_en', ascending: false)
             .limit(1)
             .maybeSingle();
-        
+
         if (res == null || res['estudiante_id'] == null) {
-            throw Exception('No se pudo recuperar el ID del estudiante creado.');
+          throw Exception('No se pudo recuperar el ID del estudiante creado.');
         }
         estudianteId = res['estudiante_id'];
         tituloExito = "Registrado";
         mensajeExito = "Nuevo estudiante creado con éxito.";
       }
 
-      // Subir foto si existe 
+      // Subir foto si existe
       if (_fotoSeleccionada != null && estudianteId.isNotEmpty) {
         final url = await _repo.subirFotoEstudiante(
-            foto: _fotoSeleccionada!, estudianteId: estudianteId);
+          foto: _fotoSeleccionada!,
+          estudianteId: estudianteId,
+        );
         await Supabase.instance.client
             .from('estudiantes')
             .update({'foto_url': url})
@@ -582,7 +840,6 @@ class _RegistrarEditarEstudiantePageState
       }
       await _mostrarDialogoExito(tituloExito, mensajeExito);
       Navigator.pop(context, true); // Regresar a la lista
-
     } catch (e) {
       debugPrint("Error guardando estudiante: $e");
       await _mostrarDialogoError("Error al Guardar", _traducirError(e));
@@ -592,14 +849,18 @@ class _RegistrarEditarEstudiantePageState
   }
 
   // Configura el estilo visual estandarizado para los campos de entrada de texto
-  InputDecoration _inputDecoration(
-      {required String label, required IconData icon, Widget? suffixIcon, String? hintText}) { 
+  InputDecoration _inputDecoration({
+    required String label,
+    required IconData icon,
+    Widget? suffixIcon,
+    String? hintText,
+  }) {
     return InputDecoration(
       labelText: label,
       labelStyle: GoogleFonts.montserrat(color: AppTheme.tonoIntermedio),
-      hintText: hintText, 
-      hintStyle: GoogleFonts.montserrat(color: AppTheme.grisClaro), 
-      
+      hintText: hintText,
+      hintStyle: GoogleFonts.montserrat(color: AppTheme.grisClaro),
+
       prefixIcon: Padding(
         padding: const EdgeInsets.only(left: 14.0, right: 10.0),
         child: FaIcon(icon, color: AppTheme.tonoIntermedio, size: 18),
@@ -611,14 +872,16 @@ class _RegistrarEditarEstudiantePageState
       filled: true,
       fillColor: AppTheme.grisClaro.withOpacity(0.2),
       border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
       enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppTheme.grisClaro.withOpacity(0.7)),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: AppTheme.grisClaro.withOpacity(0.7)),
       ),
       focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppTheme.azulFuerte, width: 2),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: AppTheme.azulFuerte, width: 2),
       ),
     );
   }
@@ -627,12 +890,25 @@ class _RegistrarEditarEstudiantePageState
   Widget _buildPhotoSelector() {
     Widget imageWidget;
     if (_fotoBytesPreview != null) {
-      imageWidget = Image.memory(_fotoBytesPreview!, fit: BoxFit.cover, width: 140, height: 140,);
+      imageWidget = Image.memory(
+        _fotoBytesPreview!,
+        fit: BoxFit.cover,
+        width: 140,
+        height: 140,
+      );
     } else if (_fotoUrlExistente != null) {
-      imageWidget = Image.network(_fotoUrlExistente!, fit: BoxFit.cover, width: 140, height: 140,);
+      imageWidget = Image.network(
+        _fotoUrlExistente!,
+        fit: BoxFit.cover,
+        width: 140,
+        height: 140,
+      );
     } else {
-      imageWidget = const FaIcon(FontAwesomeIcons.child,
-          size: 40, color: AppTheme.tonoIntermedio);
+      imageWidget = const FaIcon(
+        FontAwesomeIcons.child,
+        size: 40,
+        color: AppTheme.tonoIntermedio,
+      );
     }
     return Column(
       children: [
@@ -648,20 +924,26 @@ class _RegistrarEditarEstudiantePageState
         const SizedBox(height: 8),
         TextButton.icon(
           onPressed: _seleccionarFoto,
-          icon: const FaIcon(FontAwesomeIcons.camera,
-              color: AppTheme.negroPrincipal, size: 18),
+          icon: const FaIcon(
+            FontAwesomeIcons.camera,
+            color: AppTheme.negroPrincipal,
+            size: 18,
+          ),
           label: Text(
             _fotoBytesPreview != null || _fotoUrlExistente != null
                 ? 'Cambiar Foto'
                 : 'Seleccionar Foto',
             style: GoogleFonts.montserrat(
-                color: AppTheme.negroPrincipal,
-                fontWeight: FontWeight.w600),
+              color: AppTheme.negroPrincipal,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
     );
   }
+  
+
   // Construye la interfaz principal organizando los elementos en columnas adaptables
   @override
   Widget build(BuildContext context) {
@@ -675,10 +957,11 @@ class _RegistrarEditarEstudiantePageState
         title: Text(
           _esEdicion ? 'Editar Estudiante' : 'Registrar Estudiante',
           style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.bold, color: AppTheme.acentoBlanco),
+            fontWeight: FontWeight.bold,
+            color: AppTheme.acentoBlanco,
+          ),
         ),
-        iconTheme:
-            const IconThemeData(color: AppTheme.acentoBlanco),
+        iconTheme: const IconThemeData(color: AppTheme.acentoBlanco),
       ),
       body: Stack(
         children: [
@@ -686,73 +969,80 @@ class _RegistrarEditarEstudiantePageState
             padding: const EdgeInsets.all(16),
             child: Form(
               key: _formKey,
-              child: Column(children: [
-                isWide
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: _buildLeftColumn()),
-                          const SizedBox(width: 16),
-                          SizedBox(width: 240, child: _buildRightColumn()),
-                        ],
-                      )
-                    : Column(
-                        children: [
-                          _buildRightColumn(),
-                          const SizedBox(height: 16),
-                          _buildLeftColumn(),
-                        ],
+              child: Column(
+                children: [
+                  isWide
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _buildLeftColumn()),
+                            const SizedBox(width: 16),
+                            SizedBox(width: 240, child: _buildRightColumn()),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            _buildRightColumn(),
+                            const SizedBox(height: 16),
+                            _buildLeftColumn(),
+                          ],
+                        ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.fondoClaro,
+                        foregroundColor: AppTheme.negroPrincipal,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.fondoClaro,
-                      foregroundColor: AppTheme.negroPrincipal, 
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    
-                    // Icono de carga o de guardado
-                    icon: _cargando
-                        ? SizedBox( // Indicador de carga
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: AppTheme.negroPrincipal,
-                              strokeWidth: 2,
+
+                      // Icono de carga o de guardado
+                      icon: _cargando
+                          ? SizedBox(
+                              // Indicador de carga
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: AppTheme.negroPrincipal,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : FaIcon(
+                              _esEdicion
+                                  ? FontAwesomeIcons.userPen
+                                  : FontAwesomeIcons.userPlus,
+                              size: 18,
                             ),
-                          )
-                        : FaIcon( 
-                            _esEdicion 
-                              ? FontAwesomeIcons.userPen 
-                              : FontAwesomeIcons.userPlus, 
-                            size: 18
-                          ),
-                          
-                    label: Text(
-                      _cargando 
-                        ? 'Guardando...' 
-                        : (_esEdicion ? 'Actualizar Estudiante' : 'Guardar Estudiante'),
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+
+                      label: Text(
+                        _cargando
+                            ? 'Guardando...'
+                            : (_esEdicion
+                                  ? 'Actualizar Estudiante'
+                                  : 'Guardar Estudiante'),
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
+                      onPressed: _cargando ? null : _guardar,
                     ),
-                    onPressed: _cargando ? null : _guardar,
                   ),
-                ),
-                const SizedBox(height: 20),
-              ]),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
           if (_cargando)
             Container(
               color: AppTheme.negroPrincipal.withOpacity(0.7),
               child: const Center(
-                  child: CircularProgressIndicator(
-                      color: AppTheme.fondoClaro)),
+                child: CircularProgressIndicator(color: AppTheme.fondoClaro),
+              ),
             ),
         ],
       ),
@@ -767,180 +1057,332 @@ class _RegistrarEditarEstudiantePageState
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('Datos del Estudiante',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Datos del Estudiante',
               style: GoogleFonts.montserrat(
-                  color: AppTheme.negroPrincipal,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
-          const Divider(color: AppTheme.grisClaro, height: 24, thickness: 0.5),
-          
-          TextFormField(
-            controller: _nombreCtrl,
-            style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
-            decoration:
-                _inputDecoration(
-                  label: 'Nombre Completo', 
-                  icon: FontAwesomeIcons.user,
-                  hintText: 'Ej: Samantha García', 
-                ),
-            validator: (v) => Validadores.validarTexto(v, 'Nombre completo'), 
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: _seleccionarFechaNacimiento,
-            child: AbsorbPointer(
-              child: TextFormField(
-                style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
-                controller: TextEditingController(
+                color: AppTheme.negroPrincipal,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Divider(
+              color: AppTheme.grisClaro,
+              height: 24,
+              thickness: 0.5,
+            ),
+
+            TextFormField(
+              controller: _nombreCtrl,
+              style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
+              decoration: _inputDecoration(
+                label: 'Nombre Completo',
+                icon: FontAwesomeIcons.user,
+                hintText: 'Ej: Samantha García',
+              ),
+              validator: (v) => Validadores.validarTexto(v, 'Nombre completo'),
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: _seleccionarFechaNacimiento,
+              child: AbsorbPointer(
+                child: TextFormField(
+                  style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
+                  controller: TextEditingController(
                     text: _fechaNacimiento == null
                         ? ''
-                        : DateFormat('dd/MM/yyyy')
-                            .format(_fechaNacimiento!)),
-                decoration: _inputDecoration(
-                    label: 'Fecha de Nacimiento', icon: FontAwesomeIcons.cakeCandles),
-                validator: (_) =>
-                    _fechaNacimiento == null ? 'Selecciona una fecha' : null,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(children: [
-            Expanded(
-              child: TextFormField(
-                controller: _gradoCtrl,
-                style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
-                decoration: _inputDecoration(
-                    label: 'Grado/Curso', 
-                    icon: FontAwesomeIcons.school,
-                    hintText: 'Ej: Noveno',
+                        : DateFormat('dd/MM/yyyy').format(_fechaNacimiento!),
+                  ),
+                  decoration: _inputDecoration(
+                    label: 'Fecha de Nacimiento',
+                    icon: FontAwesomeIcons.cakeCandles,
+                  ),
+                  validator: (_) =>
+                      _fechaNacimiento == null ? 'Selecciona una fecha' : null,
                 ),
-                validator: (v) => Validadores.validarTexto(v, 'Grado'),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextFormField(
-                controller: _paraleloCtrl,
-                style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
-                decoration:
-                    _inputDecoration(
-                      label: 'Paralelo', 
-                      icon: FontAwesomeIcons.tag,
-                      hintText: 'Ej: A',
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
+                    value: _gradoCtrl.text.isNotEmpty ? _gradoCtrl.text : null,
+                    items: _gradosDisponibles
+                        .map(
+                          (g) => DropdownMenuItem(
+                            value: g,
+                            child: Text(g),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _gradoCtrl.text = value ?? '';
+                      });
+                    },
+                    validator: (value) =>
+                        value == null ? 'Seleccione un grado' : null,
+                    decoration: _inputDecoration(
+                      label: 'Grado / Curso',
+                      icon: FontAwesomeIcons.school,
+                      
                     ),
-                validator: (v) => Validadores.validarTexto(v, 'Paralelo'), 
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
+                    value: _paraleloCtrl.text.isNotEmpty ? _paraleloCtrl.text : null,
+                    items: _paralelosDisponibles
+                        .map(
+                          (p) => DropdownMenuItem(
+                            value: p,
+                            child: Text(p),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _paraleloCtrl.text = value ?? '';
+                      });
+                    },
+                    validator: (value) =>
+                        value == null ? 'Seleccione un paralelo' : null,
+                    decoration: _inputDecoration(
+                      label: 'Paralelo',
+                      icon: FontAwesomeIcons.tag,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _cedulaCtrl,
+              style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
+              decoration: _inputDecoration(
+                label: 'Cédula (Opcional)',
+                icon: FontAwesomeIcons.idCard,
+                hintText: '10 dígitos (opcional)',
+              ),
+              keyboardType: TextInputType.number,
+              validator: (v) {
+                if (v == null || v.isEmpty) return null; // Permite estar vacío
+                if (v.length != 10) return 'Debe tener 10 dígitos';
+                if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Solo números';
+                return null;
+              },
+            ),
+            const Divider(
+              color: AppTheme.grisClaro,
+              height: 30,
+              thickness: 0.5,
+            ),
+
+            Text(
+              'Ubicación del Domicilio',
+              style: GoogleFonts.montserrat(
+                color: AppTheme.negroPrincipal,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ]),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _cedulaCtrl,
-            style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
-            decoration: _inputDecoration(
-                label: 'Cédula (Opcional)', 
-                icon: FontAwesomeIcons.idCard,
-                hintText: '10 dígitos (opcional)', 
-            ),
-            keyboardType: TextInputType.number,
-            validator: (v) {
-              if (v == null || v.isEmpty) return null; // Permite estar vacío
-              if (v.length != 10) return 'Debe tener 10 dígitos';
-              if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Solo números';
-              return null;
-            },
-          ),
-          const Divider(color: AppTheme.grisClaro, height: 30, thickness: 0.5),
+            const SizedBox(height: 12),
 
-          Text('Ubicación del Domicilio',
-              style: GoogleFonts.montserrat(
-                  color: AppTheme.negroPrincipal,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          
-          ElevatedButton.icon(
-            icon: const FaIcon(FontAwesomeIcons.mapPin, size: 16),
-            label: Text('Seleccionar en Mapa',
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)),
-            onPressed: _seleccionarUbicacionEnMapa,
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.secundario,
-                foregroundColor: AppTheme.acentoBlanco,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12))),
-          ),
-          if (_coordenadasCasa != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Text(
-                'Lat: ${_coordenadasCasa!.latitude.toStringAsFixed(5)}, Lng: ${_coordenadasCasa!.longitude.toStringAsFixed(5)}',
-                style: GoogleFonts.montserrat(
-                    color: AppTheme.tonoIntermedio, fontSize: 12)),
-            ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _direccionCtrl,
-            style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
-            decoration: _inputDecoration(
-                label: 'Dirección (Referencia)',
-                icon: FontAwesomeIcons.locationDot,
-                hintText: 'Ej: Av. 10 de Agosto',
-            ),
-            validator: (v) => Validadores.validarTexto(v, 'Dirección'), 
-          ),
-          const Divider(color: AppTheme.grisClaro, height: 30, thickness: 0.5),
-
-          Text('Vincular Representante',
-              style: GoogleFonts.montserrat(
-                  color: AppTheme.negroPrincipal,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: CircleAvatar(
-                backgroundColor: AppTheme.tonoIntermedio.withOpacity(0.3), 
-                child: const FaIcon(FontAwesomeIcons.solidUser, color: AppTheme.negroPrincipal, size: 18)),
-            title: Text('Representante Asignado', style: GoogleFonts.montserrat(color: AppTheme.tonoIntermedio)),
-            subtitle: Text(_representanteNombreSeleccionado, style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal, fontWeight: FontWeight.w600, fontSize: 15)),
-            trailing: ElevatedButton(
-              onPressed: _buscarYSeleccionarRepresentante,
-              child: const FaIcon(FontAwesomeIcons.magnifyingGlass, size: 16),
+            ElevatedButton.icon(
+              icon: const FaIcon(FontAwesomeIcons.mapPin, size: 16),
+              label: Text(
+                'Seleccionar en Mapa',
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+              ),
+              onPressed: _seleccionarUbicacionEnMapa,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.secundario,
                 foregroundColor: AppTheme.acentoBlanco,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
-          ),
-          
-          const Divider(color: AppTheme.grisClaro, height: 30, thickness: 0.5),
+            if (_coordenadasCasa != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  'Lat: ${_coordenadasCasa!.latitude.toStringAsFixed(5)}, Lng: ${_coordenadasCasa!.longitude.toStringAsFixed(5)}',
+                  style: GoogleFonts.montserrat(
+                    color: AppTheme.tonoIntermedio,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _direccionCtrl,
+              style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
+              decoration: _inputDecoration(
+                label: 'Dirección (Referencia)',
+                icon: FontAwesomeIcons.locationDot,
+                hintText: 'Ej: Av. 10 de Agosto',
+              ),
+              validator: (v) => Validadores.validarTexto(v, 'Dirección'),
+            ),
+            const Divider(
+              color: AppTheme.grisClaro,
+              height: 30,
+              thickness: 0.5,
+            ),
 
-          Text('Información Adicional',
+            Text(
+              'Vincular Representante',
               style: GoogleFonts.montserrat(
-                  color: AppTheme.negroPrincipal,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _alergiasCtrl,
-            style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
-            decoration: _inputDecoration(
+                color: AppTheme.negroPrincipal,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: AppTheme.tonoIntermedio.withOpacity(0.3),
+                    child: const FaIcon(
+                      FontAwesomeIcons.solidUser,
+                      color: AppTheme.negroPrincipal,
+                      size: 18,
+                    ),
+                  ),
+                  title: Text(
+                    'Representante Asignado',
+                    style: GoogleFonts.montserrat(color: AppTheme.tonoIntermedio),
+                  ),
+                  subtitle: Text(
+                    _representanteNombreSeleccionado,
+                    style: GoogleFonts.montserrat(
+                      color: AppTheme.negroPrincipal,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  trailing: ElevatedButton(
+                    onPressed: _buscarYSeleccionarRepresentante,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.secundario,
+                      foregroundColor: AppTheme.acentoBlanco,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const FaIcon(FontAwesomeIcons.magnifyingGlass, size: 16),
+                  ),
+                ),
+
+                // Boton para desavilitar el representante del estudiante
+                if (_representanteIdSeleccionado != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: TextButton.icon(
+                      icon: const FaIcon(
+                        FontAwesomeIcons.userXmark,
+                        size: 16,
+                        color: Colors.redAccent,
+                      ),
+                      label: Text(
+                        'Quitar representante',
+                        style: GoogleFonts.montserrat(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: () async {
+                        final confirmar = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            title: Text(
+                              'Desvincular representante',
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.negroPrincipal
+                              ),
+                            ),
+                            content: Text(
+                              '¿Deseas quitar el representante de este estudiante?',
+                              style: GoogleFonts.montserrat(),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                                child: const Text('Sí, quitar'),
+                              ),
+                            ],
+                          ),
+                        ) ?? false;
+
+                        if (confirmar) {
+                          setState(() {
+                            _representanteIdSeleccionado = null;
+                            _representanteNombreSeleccionado = 'Ninguno seleccionado';
+                          });
+                        }
+                      },
+                    ),
+                  ),
+              ],
+            ),
+            const Divider(
+              color: AppTheme.grisClaro,
+              height: 30,
+              thickness: 0.5,
+            ),
+
+            Text(
+              'Información Adicional',
+              style: GoogleFonts.montserrat(
+                color: AppTheme.negroPrincipal,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _alergiasCtrl,
+              style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
+              decoration: _inputDecoration(
                 label: 'Alergias (Opcional)',
-                icon: FontAwesomeIcons.prescriptionBottle),
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _obsCtrl,
-            style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
-            decoration: _inputDecoration(
+                icon: FontAwesomeIcons.prescriptionBottle,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _obsCtrl,
+              style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal),
+              decoration: _inputDecoration(
                 label: 'Observaciones (Opcional)',
-                icon: FontAwesomeIcons.noteSticky),
-            maxLines: 3,
-          ),
-        ]),
+                icon: FontAwesomeIcons.noteSticky,
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -953,17 +1395,21 @@ class _RegistrarEditarEstudiantePageState
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          Text('Foto del Estudiante',
+        child: Column(
+          children: [
+            Text(
+              'Foto del Estudiante',
               style: GoogleFonts.montserrat(
-                  color: AppTheme.negroPrincipal,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          _buildPhotoSelector(),
-        ]),
+                color: AppTheme.negroPrincipal,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildPhotoSelector(),
+          ],
+        ),
       ),
     );
   }
 }
-

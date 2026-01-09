@@ -189,51 +189,71 @@ class _EstudiantesTabState extends State<EstudiantesTab> {
     );
   }
   // Muestra diálogo de confirmación y elimina al estudiante.
-  Future<void> _eliminar(Map<String, dynamic> estudiante) async {    
+  Future<void> _eliminar(Map<String, dynamic> estudiante) async {
+    final String estudianteId = estudiante['estudiante_id'];
     final bool tieneRepresentante = estudiante['representante'] != null;
 
-    if (tieneRepresentante) {
-      // Si tiene representante, mostrar un pop-up de error y detener la función.
-      await _mostrarDialogoError(
-        "Acción no permitida. Este estudiante tiene un representante asignado y no puede ser eliminado."
-      );
-      return; 
-    }
-    final String estudianteId = estudiante['estudiante_id'];
     final bool confirmar = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: Colors.white, 
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            title: Text('Eliminar Estudiante', style: GoogleFonts.montserrat(color: AppTheme.negroPrincipal, fontWeight: FontWeight.bold)), 
-            content: Text('¿Estás seguro? El estudiante (sin representante) será marcado como inactivo.', style: GoogleFonts.montserrat(color: Colors.black87)), 
-            actionsAlignment: MainAxisAlignment.spaceEvenly,
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text('Cancelar', style: GoogleFonts.montserrat(color: AppTheme.grisClaro, fontWeight: FontWeight.w600)),
-              ),
-              ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent.shade700,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
-                  ),
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: Text('Sí, eliminar', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)),
-              ),
-            ],
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Text(
+          'Eliminar Estudiante',
+          style: GoogleFonts.montserrat(
+            color: AppTheme.negroPrincipal,
+            fontWeight: FontWeight.bold,
           ),
-        ) ?? false;
+        ),
+        content: Text(
+          tieneRepresentante
+            ? 'Este estudiante tiene un representante asignado.\n\n'
+              'Primero se desvinculará el representante y luego el estudiante será desactivado.\n\n¿Deseas continuar?'
+            : '¿Estás seguro? El estudiante será marcado como inactivo.',
+          style: GoogleFonts.montserrat(color: Colors.black87),
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'Cancelar',
+              style: GoogleFonts.montserrat(color: AppTheme.grisClaro),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent.shade700,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              'Sí, continuar',
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    ) ?? false;
 
-    if (confirmar && mounted) {
-      try {
-        await _repo.eliminarEstudiante(estudianteId);
-        if (mounted) { 
-          _mostrarToastOscuro('Estudiante eliminado.');
-        }
-      } catch (e) {
-        if(mounted) await _mostrarDialogoError(_traducirError(e, "eliminar"));
+    if (!confirmar || !mounted) return;
+
+    try {
+      if (tieneRepresentante) {
+        await _repo.actualizarEstudiante(
+          estudianteId,
+          {'representante_id': null},
+        );
+      }
+
+      await _repo.eliminarEstudiante(estudianteId);
+
+      if (mounted) {
+        _mostrarToastOscuro('Estudiante eliminado correctamente.');
+      }
+    } catch (e) {
+      if (mounted) {
+        await _mostrarDialogoError(_traducirError(e, "eliminar"));
       }
     }
   }

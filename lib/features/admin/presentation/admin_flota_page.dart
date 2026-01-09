@@ -56,7 +56,7 @@ class _AdminFlotaPageState extends State<AdminFlotaPage> {
         children: [
           // Muestra el encabezado principal de la sección administrativa
           Text(
-            "Función: Gestión y Monitoreo de Flota",
+            "Función: Gestión y Monitoreo de la aplicación",
             style: GoogleFonts.montserrat(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -77,11 +77,11 @@ class _AdminFlotaPageState extends State<AdminFlotaPage> {
           _SectionTitle(title: "Descripción General"),
           _SectionContent(
             text:
-                "Esta sección proporciona una vista general del estado operativo del sistema. Aquí puede monitorear las métricas clave de la flota y el personal en tiempo real.",
+                "Esta sección proporciona una vista general de la aplicación. Aquí se puede visualizar el personal total de condcutores, rutas activas, estudiantes y representantes.",
           ),
           const SizedBox(height: 25),
 
-          _SectionTitle(title: "Estadísticas del Sistema"),
+          _SectionTitle(title: "Estadísticas de la aplicación de Transporte"),
           const SizedBox(height: 15),
           // Gestión de los estados de espera y presentación de datos provenientes del servidor
           FutureBuilder<Map<String, int>>(

@@ -1,6 +1,7 @@
 // Archivo - lib/features/conductor/presentation/tabs/inicio_tab.dart
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -24,7 +25,7 @@ class _InicioTabState extends State<InicioTab> {
   final _conductorRepo = ConductorRepository();
   final _authRepo = AuthRepository();
   final _ubicacionServicio = UbicacionServicio();
-
+  bool _mostrarBannerUbicacionDetenida = false;
   bool _enRecorrido = false;
   bool _cargando = true;
   String _numeroRuta = '...';
@@ -192,12 +193,19 @@ class _InicioTabState extends State<InicioTab> {
     try {
       if (nuevoEstado) {
         final tienePermisos = await _ubicacionServicio.verificarPermisos();
-        if (!tienePermisos) throw Exception('Permiso de ubicación denegado.');
+        if (!tienePermisos) {
+          await _mostrarDialogoActivarUbicacion();
+          return;
+        }
       }
 
       await _conductorRepo.setSharingLocation(nuevoEstado);
 
       if (nuevoEstado) {
+        // Desactivar el banner cuando inicie el recorrido orta vez
+        setState(() {
+          _mostrarBannerUbicacionDetenida = false;
+        });
         final estudiantes = await _conductorRepo.obtenerEstudiantes();
         await _ubicacionServicio.iniciarEscuchaConductor(conductorId, estudiantes);
 
@@ -205,6 +213,10 @@ class _InicioTabState extends State<InicioTab> {
         await _conductorRepo.enviarNotificacionInicioRecorrido(nombreConductor);
       } else {
         await _ubicacionServicio.detenerEscucha();
+        // Mostrar el banner cuando se detenga la ubicación
+        setState(() {
+          _mostrarBannerUbicacionDetenida = true;
+        });
       }
 
       setState(() => _enRecorrido = nuevoEstado);
@@ -326,6 +338,62 @@ class _InicioTabState extends State<InicioTab> {
               ),
             ),
           ),
+          if (_mostrarBannerUbicacionDetenida)
+            Positioned(
+              top: 40,
+              left: 20,
+              right: 20,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                opacity: _mostrarBannerUbicacionDetenida ? 1 : 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.4),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Se finalizó el recorrido. Vuelva a iniciarlo para compartir la ubicación.',
+                          style: GoogleFonts.montserrat(
+                            color: Colors.white,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _mostrarBannerUbicacionDetenida = false;
+                          });
+                        },
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           if (_cargando)
             Container(
               color: Colors.black.withOpacity(0.5),
@@ -517,6 +585,99 @@ class _InicioTabState extends State<InicioTab> {
               child: CircularProgressIndicator(color: AppTheme.acentoBlanco),
             ),
           ),
+      ],
+    );
+  }
+  Future<void> _mostrarDialogoActivarUbicacion() async {
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF2B241C),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Para continuar, el dispositivo necesita activar la ubicación del dispositivo.',
+              style: GoogleFonts.montserrat(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            _filaInfo(Icons.location_on, 'Ubicación del dispositivo'),
+            const SizedBox(height: 12),
+            _filaInfo(
+              Icons.gps_fixed,
+              'La ubicación debe estar activada para un rastreo correcto.',
+            ),
+
+            const SizedBox(height: 24),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.white54),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: Text(
+                      'No, gracias',
+                      style: GoogleFonts.montserrat(color: Colors.white70),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      await Geolocator.openLocationSettings();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFC26D),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: Text(
+                      'Activar',
+                      style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _filaInfo(IconData icon, String texto) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: const Color(0xFFFFC26D)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            texto,
+            style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 13),
+          ),
+        ),
       ],
     );
   }

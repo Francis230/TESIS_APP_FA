@@ -687,6 +687,17 @@ class AdminRepository {
       throw Exception('Error al activar modo conductor: $e');
     }
   }
+  // Si el admin esta en estado activo en el perfil conductor
+  Stream<bool> conductorActivoStream(String conductorId) {
+  return Supabase.instance.client
+      .from('conductores')
+      .stream(primaryKey: ['conductor_id'])
+      .eq('conductor_id', conductorId)
+      .map((rows) {
+        if (rows.isEmpty) return false;
+        return rows.first['permiso_activo'] == true;
+      });
+}
 }
 
 
