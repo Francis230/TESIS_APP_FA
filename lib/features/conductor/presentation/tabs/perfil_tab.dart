@@ -29,6 +29,12 @@ class _PerfilTabState extends State<PerfilTab> {
   final _controladorTelefono = TextEditingController();
   final _controladorDireccion = TextEditingController();
   final _controladorPlaca = TextEditingController();
+  // Variables para comparar el estado original
+  String _nombreOriginal = '';
+  String _telefonoOriginal = '';
+  String _direccionOriginal = '';
+  String _placaOriginal = '';
+  String? _urlFotoOriginal; 
 
   bool _estaCargando = true;
   bool _estaGuardando = false;
@@ -61,6 +67,13 @@ class _PerfilTabState extends State<PerfilTab> {
       if (datosDesdeRepo != null && mounted) {
         setState(() {
           _datosPerfil = datosDesdeRepo;
+          // Guardamos los valores originales
+          _nombreOriginal = datosDesdeRepo['nombre_completo'] ?? '';
+          _telefonoOriginal = datosDesdeRepo['telefono'] ?? '';
+          _direccionOriginal = datosDesdeRepo['direccion'] ?? '';
+          _placaOriginal = datosDesdeRepo['placa_vehiculo'] ?? '';
+          _urlFotoOriginal = datosDesdeRepo['foto_url'];
+          // Variables registrados 
           _urlFoto = datosDesdeRepo['foto_url'];
           _correoUsuario = datosDesdeRepo['correo'] ?? 'Correo no disponible';
           _controladorNombre.text = datosDesdeRepo['nombre_completo'] ?? '';
@@ -82,8 +95,27 @@ class _PerfilTabState extends State<PerfilTab> {
       if (mounted) setState(() => _estaCargando = false);
     }
   }
-  // Valida los campos, sube la nueva foto si existe y actualiza la información
+  // Valida los campos 
   Future<void> _actualizarPerfil() async {
+    // Verificar cambios en los textos 
+    bool cambiosEnTexto = 
+        _controladorNombre.text.trim() != _nombreOriginal ||
+        _controladorTelefono.text.trim() != _telefonoOriginal ||
+        _controladorDireccion.text.trim() != _direccionOriginal ||
+        _controladorPlaca.text.trim().toUpperCase().replaceAll('-', '') != _placaOriginal;
+
+    // Verificar si seleccionó una foto nueva
+    bool hayFotoNueva = _fotoSeleccionadaParaPreview != null;
+
+    // Si no se ha realizado algun cambio se muestra el aviso de los cambios
+    if (!cambiosEnTexto && !hayFotoNueva) {
+      await _mostrarDialogoInformativo(
+        titulo: 'Sin cambios',
+        mensaje: 'No has realizado ninguna modificación para guardar.',
+      );
+      return; 
+    }
+
     // Validación del formulario
     if (!_formKey.currentState!.validate()) {
       return;
@@ -231,6 +263,28 @@ class _PerfilTabState extends State<PerfilTab> {
           ],
         );
       },
+    );
+  }
+  // Muestra el dialogo de aviso de que no hay cambios para que se guarde
+  Future<void> _mostrarDialogoInformativo({required String titulo, required String mensaje}) async {
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        // Puedes usar una animación de Lottie de un signo de exclamación o info
+        icon: const Icon(Icons.info_outline, size: 50, color: Colors.orange),
+        title: Text(titulo, 
+            textAlign: TextAlign.center,
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: Colors.orange.shade800)),
+        content: Text(mensaje, textAlign: TextAlign.center),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Entendido', style: GoogleFonts.montserrat(color: AppTheme.azulFuerte)),
+          )
+        ],
+      ),
     );
   }
   // Construye la estructura visual de la pantalla con las tarjetas de información y controles

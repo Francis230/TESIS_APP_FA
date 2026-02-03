@@ -31,6 +31,13 @@ class _PerfilTabRepresentanteState
   final _cedulaController = TextEditingController();
   final _direccionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  // Variables para detectar cambios - Dirty Checking
+  String _nombreOriginal = '';
+  String _telefonoOriginal = '';
+  String _parentescoOriginal = '';
+  String _cedulaOriginal = '';
+  String _direccionOriginal = '';
+  String? _urlFotoOriginal; 
 
   XFile? _nuevaFotoSeleccionada;
   Uint8List? _nuevaFotoBytes;
@@ -40,6 +47,14 @@ class _PerfilTabRepresentanteState
   // Inicializa los datos del perfil al cargar la información desde la base de datos
   void _inicializarControladores(Map<String, dynamic> perfil) {
     if (_isInitialized) return;
+    // Guardamos los valores originales 
+    _nombreOriginal = perfil['nombre_completo'] ?? '';
+    _telefonoOriginal = perfil['telefono'] ?? '';
+    _parentescoOriginal = perfil['parentesco'] ?? '';
+    _cedulaOriginal = perfil['documento_identidad'] ?? '';
+    _direccionOriginal = perfil['direccion'] ?? '';
+    _urlFotoOriginal = perfil['foto_url']; 
+    // Se realiza la inicializacion de los campos de texto
     _nombreController.text = perfil['nombre_completo'] ?? '';
     _correoController.text = perfil['correo'] ?? '';
     _telefonoController.text = perfil['telefono'] ?? '';
@@ -188,6 +203,27 @@ class _PerfilTabRepresentanteState
 
   // Valida y guarda los cambios realizados en el perfil del representante
   Future<void> _guardarCambios() async {
+    // Comparar textos
+    bool huboCambiosEnTexto = 
+        _nombreController.text.trim() != _nombreOriginal ||
+        _telefonoController.text.trim() != _telefonoOriginal ||
+        _parentescoController.text.trim() != _parentescoOriginal ||
+        _cedulaController.text.trim() != _cedulaOriginal ||
+        _direccionController.text.trim() != _direccionOriginal;
+
+    // Comparar foto (Si _nuevaFotoSeleccionada no es nulo, es que eligió una nueva)
+    bool hayNuevaFoto = _nuevaFotoSeleccionada != null;
+
+    // Validacion de los datos
+    if (!huboCambiosEnTexto && !hayNuevaFoto) {
+      await _mostrarDialogoInformativo(
+        "Sin cambios", 
+        "No has realizado ninguna modificación para guardar."
+      );
+      return;
+    }
+
+    // 4. Si pasa la validación, procedemos con el guardado...
     if (!_formKey.currentState!.validate()) { 
       return;
     }
@@ -311,6 +347,34 @@ class _PerfilTabRepresentanteState
               style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
             ),
           ),
+        ],
+      ),
+    );
+  }
+  // Dialogo sobre la comparacion de los datos
+  Future<void> _mostrarDialogoInformativo(String titulo, String mensaje) async {
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        icon: const Icon(Icons.info_outline, size: 50, color: Colors.orange), // Icono de aviso
+        title: Text(
+          titulo,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(color: Colors.orange.shade800, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          mensaje,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(color: Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Entendido', style: GoogleFonts.montserrat(color: AppTheme.azulFuerte, fontWeight: FontWeight.bold)),
+          )
         ],
       ),
     );

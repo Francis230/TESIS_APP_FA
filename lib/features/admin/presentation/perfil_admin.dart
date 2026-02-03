@@ -44,31 +44,17 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
   XFile? _fotoSeleccionada;
   String? _fotoUrlActual;
   String? _userId;
-
+  // Variables para detectar cambios - Dirty Checking 
+  String _nombreOriginal = '';
+  String _telefonoOriginal = '';
+  String _direccionOriginal = '';
+  String? _fotoUrlOriginal;
   @override
   void initState() {
     super.initState();
     // Inicia la carga de datos del perfil al abrir la pantalla
     _loadPerfil();
   }
-  // // Desactivacion del modo de condcutor en el perfil del admin
-  // Future<void> _desactivarModoConductor() async {
-  //   try {
-  //     setState(() => _guardando = true);
-      
-  //     // Llamamos al repositorio para cambiar 'permiso_activo' a false
-  //     await _adminRepo.desactivarConductor(conductorId: _userId!);
-      
-  //     // Volvemos a cargar el perfil para actualizar _esConductorActivo
-  //     await _loadPerfil(); 
-      
-  //     _mostrarDialogoExito("Modo conductor desactivado correctamente.");
-  //   } catch (e) {
-  //     _mostrarDialogoError("No se pudo desactivar: $e");
-  //   } finally {
-  //     setState(() => _guardando = false);
-  //   }
-  // }
   
   // Recupera la información del usuario y verifica si tiene permisos de conductor activos
   Future<void> _loadPerfil() async {
@@ -87,12 +73,20 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
 
       if (perfil != null && mounted) {
         setState(() {
+          // Guardar los valores 
+          _nombreOriginal = perfil['nombre_completo'] ?? '';
+          _telefonoOriginal = perfil['telefono'] ?? '';
+          _direccionOriginal = perfil['direccion'] ?? '';
+          _fotoUrlOriginal = perfil['foto_url'] as String?;
+          // Seteamos los controladores
           _nombreCtrl.text = perfil['nombre_completo'] ?? '';
           _correoCtrl.text = perfil['correo'] ?? '';
           _telefonoCtrl.text = perfil['telefono'] ?? '';
           _direccionCtrl.text = perfil['direccion'] ?? '';
           _fotoUrlActual = perfil['foto_url'] as String?;
           _esConductorActivo = esConductor; 
+          // Reset de la foto seleccionada para nueva comparación
+          _fotoSeleccionada = null;
         });
       }
     } catch (e) {
@@ -120,6 +114,24 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
   }
   // Valida y almacena los cambios realizados en la información personal en la base de datos
   Future<void> _guardar() async {
+    // Verificar cambios en textos 
+    bool huboCambiosEnTexto = 
+        _nombreCtrl.text.trim() != _nombreOriginal ||
+        _telefonoCtrl.text.trim() != _telefonoOriginal ||
+        _direccionCtrl.text.trim() != _direccionOriginal;
+
+    // Verificar si hay una nueva foto seleccionada
+    bool hayNuevaFoto = _fotoSeleccionada != null;
+
+    // Si no hay cambio mostrar el aviso
+    if (!huboCambiosEnTexto && !hayNuevaFoto) {
+      await _mostrarDialogoInformativo(
+        "Sin cambios", 
+        "No has realizado ninguna modificación para guardar."
+      );
+      return;
+    }
+    // 4. Si hay cambios el flujo normal
     if (!_formKey.currentState!.validate()) return;
     setState(() => _guardando = true);
 
@@ -150,6 +162,34 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
     if (picked != null) setState(() => _fotoSeleccionada = picked);
+  }
+  // Dialogo del aviso de el estado de cambios al actualizar
+  Future<void> _mostrarDialogoInformativo(String titulo, String mensaje) async {
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        icon: const Icon(Icons.info_outline, size: 50, color: Colors.orange),
+        title: Text(
+          titulo,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(color: Colors.orange.shade800, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          mensaje,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(color: Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Entendido', style: GoogleFonts.montserrat(color: AppTheme.azulFuerte, fontWeight: FontWeight.bold)),
+          )
+        ],
+      ),
+    );
   }
 
   @override
@@ -281,6 +321,23 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
+                  // Para mostrar el correo electronico del administrador
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.email_outlined, size: 14, color: Colors.black54),
+                      const SizedBox(width: 6),
+                      Text(
+                        _correoCtrl.text, 
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   TextButton.icon(
                     onPressed: _seleccionarFoto, 
                     icon: const Icon(Icons.camera_alt, color: Color.fromARGB(179, 0, 0, 0), size: 16),
@@ -296,8 +353,25 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
                         _buildTextField(controller: _nombreCtrl, label: 'Nombre Completo', icon: FontAwesomeIcons.user, validator: (v)=>Validadores.validarTexto(v,'Nombre')),
                         _buildTextField(controller: _telefonoCtrl, label: 'Teléfono', icon: FontAwesomeIcons.phone, keyboardType: TextInputType.phone, validator: Validadores.validarTelefono),
                         _buildTextField(controller: _direccionCtrl, label: 'Dirección', icon: FontAwesomeIcons.locationDot, validator: (v)=>Validadores.validarTexto(v,'Dirección')),
-                        _buildTextField(controller: _correoCtrl, label: 'Correo', icon: FontAwesomeIcons.envelope, enabled: false), 
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton.icon(
+                      onPressed: _guardando ? null : _guardar,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 4, 14, 30), 
+                        foregroundColor: const Color.fromARGB(255, 255, 255, 255),
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
+                      icon: _guardando 
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                        : const Icon(Icons.save, size: 22),
+                      label: Text(_guardando ? 'Guardando...' : 'Guardar Cambios', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -359,7 +433,6 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
                     },
                   ), 
                   const SizedBox(height: 30),
-
                   // Botones de acción
                   SizedBox(
                     width: double.infinity,
@@ -367,9 +440,8 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
                     child: OutlinedButton.icon(
                       onPressed: () => GoRouter.of(context).push('/cambio-clave'),
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
-                        foregroundColor: const Color.fromARGB(255, 255, 255, 255),
-                        side: const BorderSide(color: Colors.white, width: 1.5), 
+                        backgroundColor: const Color.fromARGB(255, 4, 14, 30), 
+                        foregroundColor: const Color.fromARGB(255, 255, 255, 255), 
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                       ),
                       icon: const Icon(Icons.lock_outline, size: 20),
@@ -377,25 +449,7 @@ class _PerfilAdminPageState extends State<PerfilAdminPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton.icon(
-                      onPressed: _guardando ? null : _guardar,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 4, 14, 30), 
-                        foregroundColor: const Color.fromARGB(255, 255, 255, 255),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      ),
-                      icon: _guardando 
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                        : const Icon(Icons.save, size: 22),
-                      label: Text(_guardando ? 'Guardando...' : 'Guardar Cambios', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
+                  
                 ],
               ),
             ),

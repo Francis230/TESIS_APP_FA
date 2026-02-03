@@ -197,8 +197,13 @@ class AuthRepository {
         'token': token,
         'newPassword': newPassword,
       });
+      // Forzar limpieza de cualquier rastro de sesión vieja en el dispositivo
+      await _cliente.auth.signOut();
     } catch (e) {
-      throw 'Ocurrió un error al actualizar la contraseña: $e';
+      // Error especifico de Supabase
+      throw e.toString().contains('Function_ext_error') 
+        ? 'Error: Código incorrecto o expirado' 
+        : 'Ocurrió un error al actualizar la contraseña: $e';
     }
   }
 

@@ -161,7 +161,7 @@ class _CambioClavePerfilState extends State<CambioClavePerfil> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Lottie.asset(
-                    'assets/images/key_icon.json', // ⚠️ 
+                    'assets/images/key_icon.json', 
                     height: 250,
                     width: 250,
                     errorBuilder: (context, error, stackTrace) {
